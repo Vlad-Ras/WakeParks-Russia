@@ -67,6 +67,13 @@ export interface Config {
   };
   blocks: {};
   collections: {
+    cities: City;
+    parks: Park;
+    prices: Price;
+    reviews: Review;
+    'park-reports': ParkReport;
+    'park-claims': ParkClaim;
+    'contact-requests': ContactRequest;
     pages: Page;
     posts: Post;
     media: Media;
@@ -89,6 +96,13 @@ export interface Config {
     };
   };
   collectionsSelect: {
+    cities: CitiesSelect<false> | CitiesSelect<true>;
+    parks: ParksSelect<false> | ParksSelect<true>;
+    prices: PricesSelect<false> | PricesSelect<true>;
+    reviews: ReviewsSelect<false> | ReviewsSelect<true>;
+    'park-reports': ParkReportsSelect<false> | ParkReportsSelect<true>;
+    'park-claims': ParkClaimsSelect<false> | ParkClaimsSelect<true>;
+    'contact-requests': ContactRequestsSelect<false> | ContactRequestsSelect<true>;
     pages: PagesSelect<false> | PagesSelect<true>;
     posts: PostsSelect<false> | PostsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
@@ -153,122 +167,44 @@ export interface UserAuthOperations {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "pages".
+ * via the `definition` "cities".
  */
-export interface Page {
+export interface City {
   id: number;
   title: string;
-  hero: {
-    type: 'none' | 'highImpact' | 'mediumImpact' | 'lowImpact';
-    richText?: {
-      root: {
-        type: string;
-        children: {
-          type: any;
-          version: number;
-          [k: string]: unknown;
-        }[];
-        direction: ('ltr' | 'rtl') | null;
-        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-        indent: number;
-        version: number;
-      };
-      [k: string]: unknown;
-    } | null;
-    links?:
-      | {
-          link: {
-            type?: ('reference' | 'custom') | null;
-            newTab?: boolean | null;
-            reference?:
-              | ({
-                  relationTo: 'pages';
-                  value: number | Page;
-                } | null)
-              | ({
-                  relationTo: 'posts';
-                  value: number | Post;
-                } | null);
-            url?: string | null;
-            label: string;
-            /**
-             * Choose how the link should be rendered.
-             */
-            appearance?: ('default' | 'outline') | null;
-          };
-          id?: string | null;
-        }[]
-      | null;
-    media?: (number | null) | Media;
-  };
-  layout: (CallToActionBlock | ContentBlock | MediaBlock | ArchiveBlock | FormBlock)[];
-  meta?: {
-    title?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (number | null) | Media;
-    description?: string | null;
-  };
-  publishedAt?: string | null;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
    */
   generateSlug?: boolean | null;
   slug: string;
-  updatedAt: string;
-  createdAt: string;
-  _status?: ('draft' | 'published') | null;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "posts".
- */
-export interface Post {
-  id: number;
-  title: string;
-  heroImage?: (number | null) | Media;
-  content: {
-    root: {
-      type: string;
-      children: {
-        type: any;
-        version: number;
-        [k: string]: unknown;
-      }[];
-      direction: ('ltr' | 'rtl') | null;
-      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-      indent: number;
-      version: number;
-    };
-    [k: string]: unknown;
+  region?: string | null;
+  /**
+   * Выводится на карточке города и в SEO-блоках.
+   */
+  summary?: string | null;
+  /**
+   * Показывается на карточках города и в верхнем блоке страницы города.
+   */
+  coverImage?: (number | null) | Media;
+  /**
+   * Управляет тем, как изображение города отображается в карточках.
+   */
+  imageSettings?: {
+    cardImagePlacement?: ('top' | 'left' | 'right' | 'background') | null;
+    objectPosition?: ('center' | 'top' | 'bottom' | 'left' | 'right') | null;
   };
-  relatedPosts?: (number | Post)[] | null;
-  categories?: (number | Category)[] | null;
+  coordinates?: {
+    lat?: number | null;
+    lng?: number | null;
+  };
+  isPopular?: boolean | null;
+  sortOrder?: number | null;
   meta?: {
     title?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
-    image?: (number | null) | Media;
     description?: string | null;
   };
-  publishedAt?: string | null;
-  authors?: (number | User)[] | null;
-  populatedAuthors?:
-    | {
-        id?: string | null;
-        name?: string | null;
-      }[]
-    | null;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
-  generateSlug?: boolean | null;
-  slug: string;
   updatedAt: string;
   createdAt: string;
-  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -388,6 +324,380 @@ export interface FolderInterface {
   folderType?: 'media'[] | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "parks".
+ */
+export interface Park {
+  id: number;
+  title: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  city: number | City;
+  /**
+   * Публичная форма добавления создаёт парк со статусом «На модерации».
+   */
+  status: 'draft' | 'pending' | 'published' | 'archived';
+  summary: string;
+  description?: string | null;
+  /**
+   * Показывается в карточке парка и в верхнем блоке страницы. Если пусто — будет использовано первое фото из галереи.
+   */
+  cardImage?: (number | null) | Media;
+  /**
+   * Управляет тем, как главное изображение отображается в карточке.
+   */
+  imageSettings?: {
+    cardImagePlacement?: ('top' | 'left' | 'right' | 'background') | null;
+    objectPosition?: ('center' | 'top' | 'bottom' | 'left' | 'right') | null;
+  };
+  /**
+   * Показывается на странице парка. Первое фото можно использовать как fallback для карточки.
+   */
+  gallery?: (number | Media)[] | null;
+  priceFrom?: number | null;
+  /**
+   * Например: 4.8
+   */
+  rating?: number | null;
+  cableTypes?: ('ringCable' | 'reverseCable' | 'boatWake' | 'winch')[] | null;
+  features?: {
+    training?: boolean | null;
+    equipmentRent?: boolean | null;
+    kidsSchool?: boolean | null;
+    supRent?: boolean | null;
+    cafe?: boolean | null;
+    shower?: boolean | null;
+    changingRoom?: boolean | null;
+    parking?: boolean | null;
+    beach?: boolean | null;
+  };
+  /**
+   * Оставлено как fallback для старых карточек. Для нового прайса лучше использовать отдельный раздел «Wake каталог → Цены».
+   */
+  prices?:
+    | {
+        title: string;
+        description?: string | null;
+        price?: number | null;
+        duration?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  contacts?: {
+    phone?: string | null;
+    website?: string | null;
+    vk?: string | null;
+    telegram?: string | null;
+  };
+  location?: {
+    address?: string | null;
+    district?: string | null;
+    yandexMapsUrl?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+  };
+  workTime?: string | null;
+  season?: string | null;
+  /**
+   * Заполняется автоматически, если парк добавлен через публичную форму.
+   */
+  submission?: {
+    submitterName?: string | null;
+    submitterPhone?: string | null;
+    submitterEmail?: string | null;
+    comment?: string | null;
+  };
+  isVerified?: boolean | null;
+  isFeatured?: boolean | null;
+  /**
+   * Ставится после проверки заявки владельца. Показывает бейдж доверия на сайте.
+   */
+  isClaimed?: boolean | null;
+  /**
+   * Используется для публичного блока «Данные карточки» и внутреннего контроля обновлений.
+   */
+  dataQuality?: {
+    lastCheckedAt?: string | null;
+    sourceUrl?: string | null;
+    /**
+     * Например: «Прайс сверяли по VK», «График уточнить перед сезоном».
+     */
+    freshnessNote?: string | null;
+    updatePriority?: ('low' | 'normal' | 'high') | null;
+  };
+  /**
+   * Оставлено для совместимости с первой версией. Основное поле теперь — «Статус публикации».
+   */
+  published?: boolean | null;
+  meta?: {
+    title?: string | null;
+    description?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "prices".
+ */
+export interface Price {
+  id: number;
+  title: string;
+  park: number | Park;
+  status: 'draft' | 'pending' | 'published' | 'archived';
+  category: 'wake' | 'training' | 'rent' | 'sup' | 'package' | 'other';
+  description?: string | null;
+  price?: number | null;
+  weekdayPrice?: number | null;
+  weekendPrice?: number | null;
+  duration?: string | null;
+  sortOrder?: number | null;
+  /**
+   * Не обязательно. Можно указать, откуда взята цена или что нужно проверить.
+   */
+  sourceNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews".
+ */
+export interface Review {
+  id: number;
+  park: number | Park;
+  status: 'pending' | 'published' | 'rejected';
+  authorName: string;
+  /**
+   * Число от 1 до 5.
+   */
+  rating: number;
+  text: string;
+  /**
+   * Можно оставить пустым, если дата неизвестна.
+   */
+  visitedAt?: string | null;
+  source?: ('site' | 'vk' | 'yandex' | '2gis' | 'admin') | null;
+  /**
+   * Не выводится публично. Нужен только для связи при модерации.
+   */
+  contactEmail?: string | null;
+  isFeatured?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "park-reports".
+ */
+export interface ParkReport {
+  id: number;
+  park: number | Park;
+  status: 'new' | 'inProgress' | 'resolved' | 'rejected';
+  type: 'price' | 'contacts' | 'location' | 'schedule' | 'features' | 'closed' | 'duplicate' | 'other';
+  /**
+   * Что именно неактуально и на что нужно заменить.
+   */
+  message: string;
+  sourceUrl?: string | null;
+  authorName?: string | null;
+  /**
+   * Не выводится публично. Нужен только для связи при модерации.
+   */
+  contactEmail?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "park-claims".
+ */
+export interface ParkClaim {
+  id: number;
+  park: number | Park;
+  status: 'new' | 'checking' | 'approved' | 'rejected';
+  claimType: 'owner' | 'manager' | 'representative' | 'updateAccess' | 'partnership' | 'other';
+  /**
+   * Заполняется публичной формой. Помогает быстро понять, что именно ждёт владелец.
+   */
+  requestedActions?:
+    | ('claimCard' | 'updateContacts' | 'updatePrices' | 'updatePhotos' | 'updateSchedule' | 'addPromotion')[]
+    | null;
+  contactName: string;
+  companyName?: string | null;
+  role?: string | null;
+  preferredContact?: ('telegram' | 'phone' | 'email') | null;
+  phone?: string | null;
+  telegram?: string | null;
+  email?: string | null;
+  /**
+   * Сайт парка, VK, Яндекс.Карты, 2ГИС или другой источник, где видно связь заявителя с парком.
+   */
+  proofUrl?: string | null;
+  /**
+   * Дополнительный источник: второй сайт, соцсеть, пост с прайсом, карточка в картах.
+   */
+  proofUrl2?: string | null;
+  /**
+   * Что нужно сделать: подтвердить карточку, обновить данные, обсудить продвижение, передать доступ и т.д.
+   */
+  message?: string | null;
+  privacyConsent?: boolean | null;
+  adminChecklist?: {
+    contactChecked?: boolean | null;
+    sourceChecked?: boolean | null;
+    parkUpdated?: boolean | null;
+    claimBadgeEnabled?: boolean | null;
+  };
+  adminNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-requests".
+ */
+export interface ContactRequest {
+  id: number;
+  status: 'new' | 'inProgress' | 'waiting' | 'closed' | 'spam';
+  requestType: 'general' | 'partnership' | 'park' | 'ads' | 'bug' | 'legal';
+  name: string;
+  subject: string;
+  email?: string | null;
+  phone?: string | null;
+  telegram?: string | null;
+  message: string;
+  /**
+   * Заполняется автоматически, если форма передала адрес страницы.
+   */
+  sourcePage?: string | null;
+  adminNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "pages".
+ */
+export interface Page {
+  id: number;
+  title: string;
+  hero: {
+    type: 'none' | 'highImpact' | 'mediumImpact' | 'lowImpact';
+    richText?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    links?:
+      | {
+          link: {
+            type?: ('reference' | 'custom') | null;
+            newTab?: boolean | null;
+            reference?:
+              | ({
+                  relationTo: 'pages';
+                  value: number | Page;
+                } | null)
+              | ({
+                  relationTo: 'posts';
+                  value: number | Post;
+                } | null);
+            url?: string | null;
+            label: string;
+            /**
+             * Choose how the link should be rendered.
+             */
+            appearance?: ('default' | 'outline') | null;
+          };
+          id?: string | null;
+        }[]
+      | null;
+    media?: (number | null) | Media;
+  };
+  layout: (CallToActionBlock | ContentBlock | MediaBlock | ArchiveBlock | FormBlock)[];
+  meta?: {
+    title?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    description?: string | null;
+  };
+  publishedAt?: string | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "posts".
+ */
+export interface Post {
+  id: number;
+  title: string;
+  heroImage?: (number | null) | Media;
+  content: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  };
+  relatedPosts?: (number | Post)[] | null;
+  categories?: (number | Category)[] | null;
+  meta?: {
+    title?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
+    image?: (number | null) | Media;
+    description?: string | null;
+  };
+  publishedAt?: string | null;
+  authors?: (number | User)[] | null;
+  populatedAuthors?:
+    | {
+        id?: string | null;
+        name?: string | null;
+      }[]
+    | null;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -972,6 +1282,34 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
+        relationTo: 'cities';
+        value: number | City;
+      } | null)
+    | ({
+        relationTo: 'parks';
+        value: number | Park;
+      } | null)
+    | ({
+        relationTo: 'prices';
+        value: number | Price;
+      } | null)
+    | ({
+        relationTo: 'reviews';
+        value: number | Review;
+      } | null)
+    | ({
+        relationTo: 'park-reports';
+        value: number | ParkReport;
+      } | null)
+    | ({
+        relationTo: 'park-claims';
+        value: number | ParkClaim;
+      } | null)
+    | ({
+        relationTo: 'contact-requests';
+        value: number | ContactRequest;
+      } | null)
+    | ({
         relationTo: 'pages';
         value: number | Page;
       } | null)
@@ -1052,6 +1390,234 @@ export interface PayloadMigration {
   batch?: number | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cities_select".
+ */
+export interface CitiesSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  region?: T;
+  summary?: T;
+  coverImage?: T;
+  imageSettings?:
+    | T
+    | {
+        cardImagePlacement?: T;
+        objectPosition?: T;
+      };
+  coordinates?:
+    | T
+    | {
+        lat?: T;
+        lng?: T;
+      };
+  isPopular?: T;
+  sortOrder?: T;
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "parks_select".
+ */
+export interface ParksSelect<T extends boolean = true> {
+  title?: T;
+  generateSlug?: T;
+  slug?: T;
+  city?: T;
+  status?: T;
+  summary?: T;
+  description?: T;
+  cardImage?: T;
+  imageSettings?:
+    | T
+    | {
+        cardImagePlacement?: T;
+        objectPosition?: T;
+      };
+  gallery?: T;
+  priceFrom?: T;
+  rating?: T;
+  cableTypes?: T;
+  features?:
+    | T
+    | {
+        training?: T;
+        equipmentRent?: T;
+        kidsSchool?: T;
+        supRent?: T;
+        cafe?: T;
+        shower?: T;
+        changingRoom?: T;
+        parking?: T;
+        beach?: T;
+      };
+  prices?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        price?: T;
+        duration?: T;
+        id?: T;
+      };
+  contacts?:
+    | T
+    | {
+        phone?: T;
+        website?: T;
+        vk?: T;
+        telegram?: T;
+      };
+  location?:
+    | T
+    | {
+        address?: T;
+        district?: T;
+        yandexMapsUrl?: T;
+        lat?: T;
+        lng?: T;
+      };
+  workTime?: T;
+  season?: T;
+  submission?:
+    | T
+    | {
+        submitterName?: T;
+        submitterPhone?: T;
+        submitterEmail?: T;
+        comment?: T;
+      };
+  isVerified?: T;
+  isFeatured?: T;
+  isClaimed?: T;
+  dataQuality?:
+    | T
+    | {
+        lastCheckedAt?: T;
+        sourceUrl?: T;
+        freshnessNote?: T;
+        updatePriority?: T;
+      };
+  published?: T;
+  meta?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "prices_select".
+ */
+export interface PricesSelect<T extends boolean = true> {
+  title?: T;
+  park?: T;
+  status?: T;
+  category?: T;
+  description?: T;
+  price?: T;
+  weekdayPrice?: T;
+  weekendPrice?: T;
+  duration?: T;
+  sortOrder?: T;
+  sourceNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reviews_select".
+ */
+export interface ReviewsSelect<T extends boolean = true> {
+  park?: T;
+  status?: T;
+  authorName?: T;
+  rating?: T;
+  text?: T;
+  visitedAt?: T;
+  source?: T;
+  contactEmail?: T;
+  isFeatured?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "park-reports_select".
+ */
+export interface ParkReportsSelect<T extends boolean = true> {
+  park?: T;
+  status?: T;
+  type?: T;
+  message?: T;
+  sourceUrl?: T;
+  authorName?: T;
+  contactEmail?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "park-claims_select".
+ */
+export interface ParkClaimsSelect<T extends boolean = true> {
+  park?: T;
+  status?: T;
+  claimType?: T;
+  requestedActions?: T;
+  contactName?: T;
+  companyName?: T;
+  role?: T;
+  preferredContact?: T;
+  phone?: T;
+  telegram?: T;
+  email?: T;
+  proofUrl?: T;
+  proofUrl2?: T;
+  message?: T;
+  privacyConsent?: T;
+  adminChecklist?:
+    | T
+    | {
+        contactChecked?: T;
+        sourceChecked?: T;
+        parkUpdated?: T;
+        claimBadgeEnabled?: T;
+      };
+  adminNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact-requests_select".
+ */
+export interface ContactRequestsSelect<T extends boolean = true> {
+  status?: T;
+  requestType?: T;
+  name?: T;
+  subject?: T;
+  email?: T;
+  phone?: T;
+  telegram?: T;
+  message?: T;
+  sourcePage?: T;
+  adminNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

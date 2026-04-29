@@ -5,12 +5,14 @@ import { revalidateFooter } from './hooks/revalidateFooter'
 
 export const Footer: GlobalConfig = {
   slug: 'footer',
+  label: 'Подвал сайта',
   access: {
     read: () => true,
   },
   fields: [
     {
       name: 'navItems',
+      label: 'Пункты меню',
       type: 'array',
       fields: [
         link({

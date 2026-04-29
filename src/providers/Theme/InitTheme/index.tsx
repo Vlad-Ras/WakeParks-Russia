@@ -1,7 +1,7 @@
 import Script from 'next/script'
 import React from 'react'
 
-import { defaultTheme, themeLocalStorageKey } from '../ThemeSelector/types'
+import { defaultTheme, themeLocalStorageKey } from '../shared'
 
 export const InitTheme: React.FC = () => {
   return (
@@ -32,11 +32,7 @@ export const InitTheme: React.FC = () => {
     if (themeIsValid(preference)) {
       themeToSet = preference
     } else {
-      var implicitPreference = getImplicitPreference()
-
-      if (implicitPreference) {
-        themeToSet = implicitPreference
-      }
+      themeToSet = getImplicitPreference() || '${defaultTheme}'
     }
 
     document.documentElement.setAttribute('data-theme', themeToSet)

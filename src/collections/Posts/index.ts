@@ -29,6 +29,10 @@ import { slugField } from 'payload'
 
 export const Posts: CollectionConfig<'posts'> = {
   slug: 'posts',
+  labels: {
+    singular: 'Статья',
+    plural: 'Статьи',
+  },
   access: {
     create: authenticated,
     delete: authenticated,
@@ -68,6 +72,7 @@ export const Posts: CollectionConfig<'posts'> = {
   fields: [
     {
       name: 'title',
+      label: 'Заголовок',
       type: 'text',
       required: true,
     },
@@ -78,6 +83,7 @@ export const Posts: CollectionConfig<'posts'> = {
           fields: [
             {
               name: 'heroImage',
+              label: 'Главное изображение',
               type: 'upload',
               relationTo: 'media',
             },
@@ -100,12 +106,13 @@ export const Posts: CollectionConfig<'posts'> = {
               required: true,
             },
           ],
-          label: 'Content',
+          label: 'Контент',
         },
         {
           fields: [
             {
               name: 'relatedPosts',
+              label: 'Связанные статьи',
               type: 'relationship',
               admin: {
                 position: 'sidebar',
@@ -122,6 +129,7 @@ export const Posts: CollectionConfig<'posts'> = {
             },
             {
               name: 'categories',
+              label: 'Категории',
               type: 'relationship',
               admin: {
                 position: 'sidebar',
@@ -130,7 +138,7 @@ export const Posts: CollectionConfig<'posts'> = {
               relationTo: 'categories',
             },
           ],
-          label: 'Meta',
+          label: 'Параметры',
         },
         {
           name: 'meta',
@@ -163,6 +171,7 @@ export const Posts: CollectionConfig<'posts'> = {
     },
     {
       name: 'publishedAt',
+      label: 'Дата публикации',
       type: 'date',
       admin: {
         date: {
@@ -183,6 +192,7 @@ export const Posts: CollectionConfig<'posts'> = {
     },
     {
       name: 'authors',
+      label: 'Авторы',
       type: 'relationship',
       admin: {
         position: 'sidebar',
