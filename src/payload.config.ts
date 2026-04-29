@@ -19,6 +19,8 @@ import { Reviews } from './collections/Reviews'
 import { Users } from './collections/Users'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
+import { MapSettings } from './globals/MapSettings'
+import { SiteSettings } from './globals/SiteSettings'
 import { plugins } from './plugins'
 import { defaultLexical } from '@/fields/defaultLexical'
 import { getServerSideURL } from './utilities/getURL'
@@ -76,7 +78,7 @@ export default buildConfig({
   }),
   collections: [Cities, Parks, Prices, Reviews, ParkReports, ParkClaims, ContactRequests, Pages, Posts, Media, Categories, Users],
   cors: [getServerSideURL()].filter(Boolean),
-  globals: [Header, Footer],
+  globals: [Header, Footer, SiteSettings, MapSettings],
   plugins,
   secret: process.env.PAYLOAD_SECRET,
   sharp,

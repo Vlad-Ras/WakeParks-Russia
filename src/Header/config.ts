@@ -9,10 +9,14 @@ export const Header: GlobalConfig = {
   access: {
     read: () => true,
   },
+  admin: {
+    group: '4. Система',
+    description: 'Дополнительные пункты меню в шапке. Основные пункты каталога уже добавлены в коде сайта.',
+  },
   fields: [
     {
       name: 'navItems',
-      label: 'Пункты меню',
+      label: 'Дополнительные пункты меню',
       type: 'array',
       fields: [
         link({
@@ -21,6 +25,7 @@ export const Header: GlobalConfig = {
       ],
       maxRows: 6,
       admin: {
+        description: 'Используй для временных или служебных ссылок. Основные разделы уже сгруппированы в шапке.',
         initCollapsed: true,
         components: {
           RowLabel: '@/Header/RowLabel#RowLabel',

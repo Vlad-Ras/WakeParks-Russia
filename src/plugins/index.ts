@@ -14,7 +14,7 @@ import { Page, Post } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
 
 const generateTitle: GenerateTitle<Post | Page> = ({ doc }) => {
-  return doc?.title ? `${doc.title} | Payload Website Template` : 'Payload Website Template'
+  return doc?.title ? `${doc.title} | Wake Parks Russia` : 'Wake Parks Russia'
 }
 
 const generateURL: GenerateURL<Post | Page> = ({ doc }) => {
@@ -34,7 +34,7 @@ export const plugins: Plugin[] = [
             return {
               ...field,
               admin: {
-                description: 'You will need to rebuild the website when changing this field.',
+                description: 'После изменения редиректа нужно пересобрать сайт перед публикацией.',
               },
             }
           }
@@ -59,6 +59,14 @@ export const plugins: Plugin[] = [
       payment: false,
     },
     formOverrides: {
+      labels: {
+        singular: 'Форма',
+        plural: 'Формы',
+      },
+      admin: {
+        group: '3. Обратная связь',
+        useAsTitle: 'title',
+      },
       fields: ({ defaultFields }) => {
         return defaultFields.map((field) => {
           if ('name' in field && field.name === 'confirmationMessage') {

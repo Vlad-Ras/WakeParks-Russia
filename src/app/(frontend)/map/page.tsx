@@ -1,5 +1,5 @@
 import { EmptyCatalogHint } from '../_wake/cards'
-import { getCityFromPark, getCities, getParks } from '../_wake/queries'
+import { getCityFromPark, getCities, getMapSettings, getParks } from '../_wake/queries'
 import { MapExplorer } from './MapExplorer'
 
 export const metadata = {
@@ -8,7 +8,7 @@ export const metadata = {
 }
 
 export default async function MapPage() {
-  const [cities, parks] = await Promise.all([getCities(), getParks(500)])
+  const [cities, parks, mapSettings] = await Promise.all([getCities(), getParks(500), getMapSettings()])
   const parksWithLocation = parks.filter((park) => {
     const city = getCityFromPark(park)
     return city?.slug && park.slug && (park.location?.address || park.location?.yandexMapsUrl || (park.location?.lat && park.location?.lng))
@@ -53,15 +53,14 @@ export default async function MapPage() {
           <h1 className="mt-3 text-4xl font-semibold tracking-tight md:text-6xl">Карта вейк-парков России</h1>
           <p className="mt-5 max-w-3xl text-lg text-muted-foreground">
             Выбирай город, услуги и тип катания, кликай по маркерам и открывай карточку парка с ценами, контактами и маршрутом.
-            Карта работает без API-ключа: маркеры строятся по координатам, а выбранный парк дополнительно открывается во встроенной Яндекс.Карте.
+            Карта может работать в двух режимах: без API-ключа как схема или как настоящая Яндекс.Карта, если в админке заполнен ключ JavaScript API.
           </p>
         </section>
 
         <aside className="rounded-3xl border border-border bg-card p-6">
           <h2 className="text-xl font-semibold">Как сделать карту точнее</h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            В админке у парка заполняй широту и долготу. Если координат нет, карточка всё равно появится в списке,
-            но вместо карты будет подсказка.
+            В админке у парка заполняй широту и долготу. API-ключ Яндекс.Карт теперь задаётся отдельно: Система → Настройки карт. Если координат нет, карточка всё равно появится в списке, но вместо маркера будет подсказка.
           </p>
           <div className="mt-5 grid gap-2 text-sm text-muted-foreground">
             <span className="rounded-full bg-secondary px-3 py-2">Городов: {mapCities.length}</span>
@@ -70,7 +69,7 @@ export default async function MapPage() {
         </aside>
       </div>
 
-      {mapParks.length ? <MapExplorer cities={mapCities} parks={mapParks} /> : <div className="mt-10"><EmptyCatalogHint /></div>}
+      {mapParks.length ? <MapExplorer cities={mapCities} mapSettings={mapSettings} parks={mapParks} /> : <div className="mt-10"><EmptyCatalogHint /></div>}
     </main>
   )
 }

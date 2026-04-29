@@ -6,15 +6,16 @@ export const Code: Block = {
   fields: [
     {
       name: 'language',
+      label: 'Язык кода',
       type: 'select',
       defaultValue: 'typescript',
       options: [
         {
-          label: 'Typescript',
+          label: 'TypeScript',
           value: 'typescript',
         },
         {
-          label: 'Javascript',
+          label: 'JavaScript',
           value: 'javascript',
         },
         {
@@ -26,8 +27,12 @@ export const Code: Block = {
     {
       name: 'code',
       type: 'code',
-      label: false,
+      label: 'Код',
       required: true,
     },
   ],
+  labels: {
+    plural: 'Блоки кода',
+    singular: 'Блок кода',
+  },
 }

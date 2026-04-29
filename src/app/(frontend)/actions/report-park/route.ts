@@ -2,6 +2,8 @@ import configPromise from '@payload-config'
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 
+import { getSiteSettings } from '../../_wake/siteSettings'
+
 type ReportParkBody = {
   parkId?: string | number
   type?: string
@@ -18,7 +20,13 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as ReportParkBody
 
-    if (body.company) {
+    const settings = await getSiteSettings()
+
+    if (settings.forms?.reportFormEnabled === false) {
+      return NextResponse.json({ error: 'Форма сообщения об ошибке временно отключена.' }, { status: 503 })
+    }
+
+    if (settings.forms?.honeypotEnabled !== false && body.company) {
       return NextResponse.json({ ok: true })
     }
 

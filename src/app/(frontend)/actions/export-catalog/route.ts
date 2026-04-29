@@ -37,7 +37,8 @@ export async function GET(request: Request) {
   ])
 
   const cities = citiesResult.docs.map(normalizeCity)
-  const parks = parksResult.docs.map(normalizePark)
+  const cityById = new Map(cities.map((city) => [String(city.id), city]))
+  const parks = parksResult.docs.map((park) => normalizePark(park, cityById))
   const prices = pricesResult.docs.map(normalizePrice)
 
   if (format === 'csv') {
@@ -79,8 +80,8 @@ function normalizeCity(city: any) {
   }
 }
 
-function normalizePark(park: any) {
-  const city = typeof park.city === 'object' && park.city ? park.city : null
+function normalizePark(park: any, cityById: Map<string, ReturnType<typeof normalizeCity>>) {
+  const city = typeof park.city === 'object' && park.city ? park.city : cityById.get(String(park.city || ''))
 
   return {
     id: park.id,

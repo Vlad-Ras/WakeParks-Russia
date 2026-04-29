@@ -21,6 +21,11 @@ export const Media: CollectionConfig = {
     plural: 'Медиафайлы',
   },
   folders: true,
+  admin: {
+    group: '2. Контент сайта',
+    description: 'Изображения для городов, парков, галерей, статей и SEO. После загрузки файл можно выбрать в карточке города или парка.',
+    useAsTitle: 'alt',
+  },
   access: {
     create: authenticated,
     delete: authenticated,
@@ -32,11 +37,13 @@ export const Media: CollectionConfig = {
       name: 'alt',
       label: 'Alt-текст',
       type: 'text',
-      //required: true,
+      admin: {
+        description: 'Кратко опиши изображение. Этот текст нужен для SEO и доступности.',
+      },
     },
     {
       name: 'caption',
-      label: 'Подпись',
+      label: 'Подпись к медиа',
       type: 'richText',
       editor: lexicalEditor({
         features: ({ rootFeatures }) => {

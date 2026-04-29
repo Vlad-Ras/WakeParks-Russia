@@ -5,72 +5,141 @@ import React from 'react'
 import { ThemeSelector } from '@/providers/Theme/ThemeSelector'
 import { CMSLink } from '@/components/Link'
 import { Logo } from '@/components/Logo/Logo'
+import { getSiteSettings, normalizeTelegramUrl } from '@/app/(frontend)/_wake/siteSettings'
 
-const staticFooterLinks = [
-  { href: '/cities', label: 'Города' },
-  { href: '/regions', label: 'Регионы' },
-  { href: '/wake-parks', label: 'Парки' },
-  { href: '/best', label: 'Лучшие' },
-  { href: '/new-parks', label: 'Новые' },
-  { href: '/recently-updated', label: 'Обновления' },
-  { href: '/pick', label: 'Подбор' },
-  { href: '/training', label: 'Новичкам' },
-  { href: '/kids', label: 'Детям' },
-  { href: '/sup', label: 'SUP' },
-  { href: '/cable-wake', label: 'Канатки' },
-  { href: '/map', label: 'Карта' },
-  { href: '/guides', label: 'Гайды' },
-  { href: '/compare', label: 'Сравнение' },
-  { href: '/for-parks', label: 'Для парков' },
-  { href: '/owner-guide', label: 'Гайд владельца' },
-  { href: '/advertising', label: 'Реклама' },
-  { href: '/about', label: 'О проекте' },
-  { href: '/contacts', label: 'Контакты' },
-  { href: '/privacy', label: 'Политика ПДн' },
-  { href: '/terms', label: 'Соглашение' },
-  { href: '/update-park', label: 'Обновить данные' },
-  { href: '/add-park', label: 'Добавить парк' },
-  { href: '/launch-checklist', label: 'Чеклист' },
+const footerGroups = [
+  {
+    title: 'Каталог',
+    links: [
+      { href: '/wake-parks', label: 'Все парки' },
+      { href: '/cities', label: 'Города' },
+      { href: '/regions', label: 'Регионы' },
+      { href: '/map', label: 'Карта' },
+    ],
+  },
+  {
+    title: 'Выбор парка',
+    links: [
+      { href: '/pick', label: 'Подбор' },
+      { href: '/best', label: 'Лучшие' },
+      { href: '/new-parks', label: 'Новые' },
+      { href: '/recently-updated', label: 'Обновления' },
+      { href: '/favorites', label: 'Избранное' },
+      { href: '/compare', label: 'Сравнение' },
+    ],
+  },
+  {
+    title: 'Подборки',
+    links: [
+      { href: '/training', label: 'Новичкам' },
+      { href: '/kids', label: 'Детям' },
+      { href: '/sup', label: 'SUP и отдых' },
+      { href: '/cable-wake', label: 'Канатки' },
+      { href: '/guides', label: 'Гайды' },
+    ],
+  },
+  {
+    title: 'Для парков',
+    links: [
+      { href: '/add-park', label: 'Добавить парк' },
+      { href: '/update-park', label: 'Обновить данные' },
+      { href: '/for-parks', label: 'Владельцам' },
+      { href: '/owner-guide', label: 'Гайд владельца' },
+      { href: '/advertising', label: 'Реклама' },
+    ],
+  },
+  {
+    title: 'Проект',
+    links: [
+      { href: '/about', label: 'О проекте' },
+      { href: '/contacts', label: 'Контакты' },
+      { href: '/privacy', label: 'Политика ПДн' },
+      { href: '/terms', label: 'Соглашение' },
+      { href: '/cookies', label: 'Cookies' },
+    ],
+  },
+]
+
+const serviceLinks = [
+  { href: '/search', label: 'Поиск' },
+  { href: '/launch-checklist', label: 'Чеклист запуска' },
   { href: '/data-tools', label: 'Импорт / экспорт' },
 ]
 
 export async function Footer() {
-  const footerData = await getCachedGlobal('footer', 1)()
+  const [footerData, settings] = await Promise.all([getCachedGlobal('footer', 1)(), getSiteSettings()])
   const navItems = footerData?.navItems || []
+  const tagline = settings.tagline || 'Каталог вейкборд-парков России: города, цены, обучение, инфраструктура, отзывы и маршруты.'
+  const telegramUrl = normalizeTelegramUrl(settings.contacts?.telegram)
 
   return (
     <footer className="mt-auto border-t border-border bg-black text-white dark:bg-card">
-      <div className="container grid gap-8 py-8 md:grid-cols-[1.2fr_2fr] md:items-start">
-        <div>
-          <Link className="inline-flex items-center" href="/">
-            <Logo />
-          </Link>
-          <p className="mt-4 max-w-sm text-sm text-white/65">
-            Каталог вейкборд-парков России: города, цены, обучение, инфраструктура, отзывы и маршруты.
-          </p>
-          <div className="mt-5">
-            <ThemeSelector />
+      <div className="container py-10">
+        <div className="grid gap-8 lg:grid-cols-[1.05fr_2.4fr] lg:items-start">
+          <div>
+            <Link className="inline-flex items-center" href="/" aria-label="Wake Parks Russia — на главную">
+              <Logo />
+            </Link>
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/65">{tagline}</p>
+
+            {(settings.contacts?.publicEmail || settings.contacts?.phone || telegramUrl || settings.contacts?.vk) && (
+              <div className="mt-5 grid gap-2 text-sm text-white/65">
+                {settings.contacts?.publicEmail ? (
+                  <a className="hover:text-white hover:underline" href={`mailto:${settings.contacts.publicEmail}`}>
+                    {settings.contacts.publicEmail}
+                  </a>
+                ) : null}
+                {settings.contacts?.phone ? (
+                  <a className="hover:text-white hover:underline" href={`tel:${settings.contacts.phone}`}>
+                    {settings.contacts.phone}
+                  </a>
+                ) : null}
+                {telegramUrl ? (
+                  <a className="hover:text-white hover:underline" href={telegramUrl} rel="noreferrer" target="_blank">
+                    Telegram
+                  </a>
+                ) : null}
+                {settings.contacts?.vk ? (
+                  <a className="hover:text-white hover:underline" href={settings.contacts.vk} rel="noreferrer" target="_blank">
+                    VK
+                  </a>
+                ) : null}
+              </div>
+            )}
+
+            <div className="mt-5 inline-flex rounded-2xl border border-white/10 bg-white/5 p-2">
+              <ThemeSelector />
+            </div>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+            {footerGroups.map((group) => (
+              <nav aria-label={group.title} className="grid content-start gap-2 text-sm" key={group.title}>
+                <p className="mb-1 font-semibold text-white">{group.title}</p>
+                {group.links.map((item) => (
+                  <Link className="text-white/64 transition-colors hover:text-white hover:underline" href={item.href} key={item.href}>
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+            ))}
           </div>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-2 md:justify-self-end">
-          <nav aria-label="Основная навигация в подвале" className="grid gap-3 text-sm">
-            <p className="font-semibold text-white">Разделы</p>
-            {staticFooterLinks.map((item) => (
-              <Link className="text-white/70 hover:text-white hover:underline" href={item.href} key={item.href}>
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-
-          {navItems.length ? (
-            <nav aria-label="CMS-навигация в подвале" className="grid gap-3 text-sm">
-              <p className="font-semibold text-white">Дополнительно</p>
+        <div className="mt-10 border-t border-white/10 pt-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm text-white/55">
+              {serviceLinks.map((item) => (
+                <Link className="hover:text-white hover:underline" href={item.href} key={item.href}>
+                  {item.label}
+                </Link>
+              ))}
               {navItems.map(({ link }, i) => {
-                return <CMSLink className="text-white/70 hover:text-white" key={i} {...link} />
+                return <CMSLink className="text-white/55 hover:text-white" key={i} {...link} />
               })}
-            </nav>
-          ) : null}
+            </div>
+            <p className="text-xs text-white/40">MVP-версия агрегатора. Данные карточек требуют ручной проверки.</p>
+          </div>
         </div>
       </div>
     </footer>

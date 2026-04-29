@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 
 import { Breadcrumbs } from '../_wake/Breadcrumbs'
 import { getCityFromPark, getParks } from '../_wake/queries'
+import { getSiteSettings } from '../_wake/siteSettings'
 import { UpdateParkForm } from './UpdateParkForm'
 
 export const metadata: Metadata = {
@@ -17,7 +18,7 @@ type Args = {
 
 export default async function UpdateParkPage({ searchParams }: Args) {
   const params = await searchParams
-  const parks = await getParks(1000)
+  const [parks, settings] = await Promise.all([getParks(1000), getSiteSettings()])
   const options = parks.map((park) => {
     const city = getCityFromPark(park)
     return {
@@ -39,7 +40,16 @@ export default async function UpdateParkPage({ searchParams }: Args) {
             Если цена, график, адрес, контакты или список услуг изменились, отправь правку. Она попадёт в админку и будет опубликована после проверки.
           </p>
           <div className="mt-8">
-            <UpdateParkForm parks={options} selectedParkId={params?.park} />
+            {settings.forms?.reportFormEnabled === false ? (
+              <div className="rounded-3xl border border-dashed border-border bg-card p-8 text-center">
+                <h2 className="text-2xl font-semibold">Форма обновления данных временно отключена</h2>
+                <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
+                  Включить её можно в админке: 4. Система → Настройки сайта → Формы и модерация.
+                </p>
+              </div>
+            ) : (
+              <UpdateParkForm parks={options} selectedParkId={params?.park} />
+            )}
           </div>
         </section>
 

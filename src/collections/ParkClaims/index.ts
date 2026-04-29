@@ -16,7 +16,7 @@ export const ParkClaims: CollectionConfig = {
   },
   admin: {
     defaultColumns: ['park', 'claimType', 'status', 'contactName', 'preferredContact', 'createdAt'],
-    group: 'Wake каталог',
+    group: '1. Wake каталог',
     useAsTitle: 'contactName',
   },
   fields: [

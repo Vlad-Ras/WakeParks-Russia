@@ -17,22 +17,22 @@ export const hero: Field = {
       name: 'type',
       type: 'select',
       defaultValue: 'lowImpact',
-      label: 'Type',
+      label: 'Тип первого экрана',
       options: [
         {
-          label: 'None',
+          label: 'Без первого экрана',
           value: 'none',
         },
         {
-          label: 'High Impact',
+          label: 'Большой первый экран',
           value: 'highImpact',
         },
         {
-          label: 'Medium Impact',
+          label: 'Средний первый экран',
           value: 'mediumImpact',
         },
         {
-          label: 'Low Impact',
+          label: 'Компактный первый экран',
           value: 'lowImpact',
         },
       ],
@@ -51,16 +51,18 @@ export const hero: Field = {
           ]
         },
       }),
-      label: false,
+      label: 'Текст первого экрана',
     },
     linkGroup({
       overrides: {
+        label: 'Кнопки первого экрана',
         maxRows: 2,
       },
     }),
     {
       name: 'media',
       type: 'upload',
+      label: 'Изображение первого экрана',
       admin: {
         condition: (_, { type } = {}) => ['highImpact', 'mediumImpact'].includes(type),
       },

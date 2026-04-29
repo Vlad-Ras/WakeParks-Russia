@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 import type { CityDoc, ParkDoc } from './queries'
 import { cableTypeLabels, featureLabels, getGroupedActiveFeatures } from './labels'
-import { getCityFromPark } from './queries'
+import { getCityFromPark, getParkHref } from './queries'
 import { FavoriteButton } from './FavoriteButton'
 import { CompareButton } from './CompareButton'
 import { getImageAlt, getImageUrl, getObjectPosition } from './media'
@@ -96,7 +96,7 @@ export function CityCard({ city, parksCount }: { city: CityDoc; parksCount?: num
 
 export function ParkCard({ park }: { park: ParkDoc }) {
   const city = getCityFromPark(park)
-  const href = city?.slug && park.slug ? `/wake-parks/${city.slug}/${park.slug}` : '/wake-parks'
+  const href = getParkHref(park)
   const activeFeatures = Object.entries(park.features || {})
     .filter(([, enabled]) => enabled)
     .slice(0, 4)

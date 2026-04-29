@@ -23,7 +23,7 @@ export const Prices: CollectionConfig = {
   },
   admin: {
     defaultColumns: ['title', 'park', 'category', 'price', 'duration', 'status', 'sortOrder'],
-    group: 'Wake каталог',
+    group: '1. Wake каталог',
     useAsTitle: 'title',
   },
   fields: [

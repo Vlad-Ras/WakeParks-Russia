@@ -3,6 +3,9 @@
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
 
+import type { MapSettingsDoc } from '../_wake/queries'
+import { YandexMap } from './YandexMap'
+
 import { cableTypeLabels, featureGroups, featureLabels } from '../_wake/labels'
 
 type MapCity = {
@@ -32,7 +35,7 @@ type MapPark = {
 const cableOptions = Object.entries(cableTypeLabels)
 const featureOptions = featureGroups.flatMap((group) => group.keys.map((key) => ({ key, group: group.title, label: featureLabels[key] || key })))
 
-export function MapExplorer({ cities, parks }: { cities: MapCity[]; parks: MapPark[] }) {
+export function MapExplorer({ cities, mapSettings = {}, parks }: { cities: MapCity[]; mapSettings?: MapSettingsDoc; parks: MapPark[] }) {
   const [query, setQuery] = useState('')
   const [citySlug, setCitySlug] = useState('')
   const [selectedId, setSelectedId] = useState(parks[0]?.id || '')
@@ -72,6 +75,7 @@ export function MapExplorer({ cities, parks }: { cities: MapCity[]; parks: MapPa
   }, [citySlug, parks, query, selectedCableTypes, selectedFeatures, showOnlyWithCoordinates])
 
   const parksWithCoordinates = useMemo(() => filteredParks.filter(hasCoordinates), [filteredParks])
+  const useYandexJsApi = mapSettings.provider === 'yandex-js-api' && Boolean(mapSettings.yandexApiKey)
   const selectedPark = filteredParks.find((park) => park.id === selectedId) || filteredParks[0] || parks[0]
   const selectedHref = selectedPark ? `/wake-parks/${selectedPark.citySlug}/${selectedPark.slug}` : '/wake-parks'
   const mapBounds = useMemo(() => createBounds(parksWithCoordinates), [parksWithCoordinates])
@@ -216,6 +220,29 @@ export function MapExplorer({ cities, parks }: { cities: MapCity[]; parks: MapPa
       </aside>
 
       <div className="grid gap-6">
+        {useYandexJsApi ? (
+          <div className="overflow-hidden rounded-3xl border border-border bg-card">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
+              <div>
+                <p className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">Яндекс.Карты API</p>
+                <h2 className="mt-1 text-2xl font-semibold">Настоящая карта с маркерами</h2>
+              </div>
+              <span className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">ключ из админки</span>
+            </div>
+            <YandexMap
+              apiKey={mapSettings.yandexApiKey || ''}
+              defaultCenter={mapSettings.defaultCenter}
+              defaultZoom={mapSettings.defaultZoom}
+              onSelect={setSelectedId}
+              parks={parksWithCoordinates}
+              selectedParkId={selectedPark?.id}
+            />
+          </div>
+        ) : (
+          <div className="rounded-3xl border border-border bg-card p-5 text-sm text-muted-foreground">
+            Настоящая Яндекс.Карта выключена. В админке открой <b>Система → Настройки карт</b>, выбери режим <b>Яндекс.Карты JavaScript API</b> и вставь API-ключ. Пока ниже работает карта-схема без ключа.
+          </div>
+        )}
         <div className="overflow-hidden rounded-3xl border border-border bg-card">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
             <div>

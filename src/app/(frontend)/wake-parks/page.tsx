@@ -3,6 +3,7 @@ import { Breadcrumbs } from '../_wake/Breadcrumbs'
 import { ParkDirectoryFilters, type ParkDirectoryFilterValues } from '../_wake/ParkDirectoryFilters'
 import type { ParkDoc } from '../_wake/queries'
 import { getCityFromPark, getCities, getParks } from '../_wake/queries'
+import { getSiteSettings } from '../_wake/siteSettings'
 
 export const metadata = {
   title: 'Все вейк-парки России — Wake Parks Russia',
@@ -15,8 +16,8 @@ type Args = {
 
 export default async function WakeParksPage({ searchParams: searchParamsPromise }: Args) {
   const rawSearchParams = (await searchParamsPromise) || {}
-  const filters = normalizeFilters(rawSearchParams)
-  const [cities, allParks] = await Promise.all([getCities(), getParks(500)])
+  const [cities, allParks, settings] = await Promise.all([getCities(), getParks(500), getSiteSettings()])
+  const filters = normalizeFilters(rawSearchParams, settings.catalog?.parkSort || 'featured')
   const parks = filterAndSortParks(allParks, filters)
 
   return (
@@ -62,14 +63,14 @@ export default async function WakeParksPage({ searchParams: searchParamsPromise 
   )
 }
 
-function normalizeFilters(params: Record<string, string | string[] | undefined>): ParkDirectoryFilterValues {
+function normalizeFilters(params: Record<string, string | string[] | undefined>, defaultSort = 'featured'): ParkDirectoryFilterValues {
   return {
     q: asString(params.q).trim(),
     city: asString(params.city).trim(),
     features: asArray(params.feature),
     cableTypes: asArray(params.cable),
     maxPrice: asString(params.maxPrice).trim(),
-    sort: asString(params.sort).trim() || 'featured',
+    sort: asString(params.sort).trim() || defaultSort,
   }
 }
 

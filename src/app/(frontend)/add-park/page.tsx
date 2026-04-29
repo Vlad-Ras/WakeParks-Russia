@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { getCities } from '../_wake/queries'
+import { getSiteSettings } from '../_wake/siteSettings'
 import { AddParkForm } from './AddParkForm'
 
 export const metadata = {
@@ -9,7 +10,7 @@ export const metadata = {
 }
 
 export default async function AddParkPage() {
-  const cities = await getCities()
+  const [cities, settings] = await Promise.all([getCities(), getSiteSettings()])
 
   return (
     <main className="container py-16">
@@ -42,7 +43,16 @@ export default async function AddParkPage() {
       </div>
 
       <div className="mt-10">
-        <AddParkForm cities={cities} />
+        {settings.forms?.addParkFormEnabled === false ? (
+          <div className="rounded-3xl border border-dashed border-border bg-card p-8 text-center">
+            <h2 className="text-2xl font-semibold">Форма добавления парка временно отключена</h2>
+            <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
+              Включить её можно в админке: 4. Система → Настройки сайта → Формы и модерация.
+            </p>
+          </div>
+        ) : (
+          <AddParkForm cities={cities} />
+        )}
       </div>
     </main>
   )

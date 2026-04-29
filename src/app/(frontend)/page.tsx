@@ -1,7 +1,7 @@
 import Link from 'next/link'
 
 import { CityCard, EmptyCatalogHint, ParkCard } from './_wake/cards'
-import { getCities, getParks } from './_wake/queries'
+import { countParksByCity, getCities, getParks, getCityRefId } from './_wake/queries'
 import { guides } from './guides/data'
 
 export const metadata = {
@@ -15,13 +15,8 @@ export default async function HomePage() {
   const parks = allParks.slice(0, 6)
   const popularCities = cities.filter((city) => city.isPopular).slice(0, 6)
   const cityCards = popularCities.length ? popularCities : cities.slice(0, 6)
-  const parkCounts = new Map<string | number, number>()
+  const parkCounts = countParksByCity(allParks)
 
-  allParks.forEach((park) => {
-    const city = typeof park.city === 'object' && park.city ? park.city : null
-    if (!city?.id) return
-    parkCounts.set(city.id, (parkCounts.get(city.id) || 0) + 1)
-  })
 
   return (
     <main>
@@ -94,7 +89,7 @@ export default async function HomePage() {
         {cityCards.length ? (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {cityCards.map((city) => (
-              <CityCard city={city} key={city.id} parksCount={parkCounts.get(city.id) || 0} />
+              <CityCard city={city} key={city.id} parksCount={parkCounts.get(getCityRefId(city) || '') || 0} />
             ))}
           </div>
         ) : (

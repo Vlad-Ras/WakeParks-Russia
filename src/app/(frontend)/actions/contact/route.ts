@@ -2,6 +2,8 @@ import configPromise from '@payload-config'
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 
+import { getSiteSettings } from '../../_wake/siteSettings'
+
 type ContactBody = {
   requestType?: string
   name?: string
@@ -21,8 +23,14 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as ContactBody
 
+    const settings = await getSiteSettings()
+
+    if (settings.forms?.contactFormEnabled === false) {
+      return NextResponse.json({ error: 'Форма контактов временно отключена.' }, { status: 503 })
+    }
+
     // honeypot: if bot fills hidden company field, answer ok and do nothing
-    if (body.company) {
+    if (settings.forms?.honeypotEnabled !== false && body.company) {
       return NextResponse.json({ ok: true })
     }
 

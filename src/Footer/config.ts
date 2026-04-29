@@ -9,18 +9,23 @@ export const Footer: GlobalConfig = {
   access: {
     read: () => true,
   },
+  admin: {
+    group: '4. Система',
+    description: 'Дополнительные ссылки в нижней части сайта. Основные группы подвала уже собраны в коде.',
+  },
   fields: [
     {
       name: 'navItems',
-      label: 'Пункты меню',
+      label: 'Дополнительные ссылки подвала',
       type: 'array',
       fields: [
         link({
           appearances: false,
         }),
       ],
-      maxRows: 6,
+      maxRows: 8,
       admin: {
+        description: 'Например: партнёрские страницы, служебные документы или временные акции.',
         initCollapsed: true,
         components: {
           RowLabel: '@/Footer/RowLabel#RowLabel',

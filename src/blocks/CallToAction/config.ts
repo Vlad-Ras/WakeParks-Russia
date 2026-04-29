@@ -26,17 +26,18 @@ export const CallToAction: Block = {
           ]
         },
       }),
-      label: false,
+      label: 'Текст блока',
     },
     linkGroup({
       appearances: ['default', 'outline'],
       overrides: {
+        label: 'Кнопки',
         maxRows: 2,
       },
     }),
   ],
   labels: {
-    plural: 'Calls to Action',
-    singular: 'Call to Action',
+    plural: 'Призывы к действию',
+    singular: 'Призыв к действию',
   },
 }

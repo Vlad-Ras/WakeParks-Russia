@@ -16,7 +16,7 @@ export const ParkReports: CollectionConfig = {
   },
   admin: {
     defaultColumns: ['park', 'type', 'status', 'authorName', 'createdAt'],
-    group: 'Wake каталог',
+    group: '1. Wake каталог',
     useAsTitle: 'message',
   },
   fields: [

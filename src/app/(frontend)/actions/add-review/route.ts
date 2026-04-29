@@ -2,6 +2,8 @@ import configPromise from '@payload-config'
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 
+import { getSiteSettings } from '../../_wake/siteSettings'
+
 type AddReviewBody = {
   parkId?: string | number
   authorName?: string
@@ -15,7 +17,13 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as AddReviewBody
 
-    if (body.company) {
+    const settings = await getSiteSettings()
+
+    if (settings.forms?.reviewFormEnabled === false) {
+      return NextResponse.json({ error: 'Форма отзывов временно отключена.' }, { status: 503 })
+    }
+
+    if (settings.forms?.honeypotEnabled !== false && body.company) {
       return NextResponse.json({ ok: true })
     }
 
@@ -52,7 +60,7 @@ export async function POST(request: Request) {
         text,
         contactEmail,
         source: 'site',
-        status: 'pending',
+        status: settings.forms?.newReviewStatus || 'pending',
         isFeatured: false,
       },
       overrideAccess: true,

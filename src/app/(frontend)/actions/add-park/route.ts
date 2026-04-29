@@ -2,6 +2,8 @@ import configPromise from '@payload-config'
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 
+import { getSiteSettings } from '../../_wake/siteSettings'
+
 type AddParkPrice = {
   title?: string
   category?: string
@@ -44,7 +46,13 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as AddParkBody
 
-    if (body.company) {
+    const settings = await getSiteSettings()
+
+    if (settings.forms?.addParkFormEnabled === false) {
+      return NextResponse.json({ error: 'Форма добавления парка временно отключена.' }, { status: 503 })
+    }
+
+    if (settings.forms?.honeypotEnabled !== false && body.company) {
       return NextResponse.json({ ok: true })
     }
 
@@ -111,7 +119,7 @@ export async function POST(request: Request) {
           submitterEmail: cleanText(body.submitterEmail),
           comment: moderatorComment,
         },
-        status: 'pending',
+        status: settings.forms?.newParkStatus || 'pending',
         published: false,
         isVerified: false,
         isFeatured: false,
@@ -132,7 +140,7 @@ export async function POST(request: Request) {
           weekendPrice: price.weekendPrice,
           duration: price.duration,
           sortOrder: index + 1,
-          status: 'pending',
+          status: settings.forms?.newPriceStatus || 'pending',
           sourceNote: 'Добавлено через публичную форму вместе с парком. Проверь цену перед публикацией.',
         },
         overrideAccess: true,

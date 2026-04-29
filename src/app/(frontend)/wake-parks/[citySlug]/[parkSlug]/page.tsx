@@ -8,6 +8,7 @@ import { cableTypeLabels, featureLabels, getGroupedActiveFeatures } from '../../
 import { FavoriteButton } from '../../../_wake/FavoriteButton'
 import { CompareButton } from '../../../_wake/CompareButton'
 import { getImageAlt, getImageUrl, getObjectPosition } from '../../../_wake/media'
+import { getSiteSettings } from '../../../_wake/siteSettings'
 import {
   getCities,
   getCityBySlug,
@@ -73,10 +74,11 @@ export default async function ParkPage({ params: paramsPromise }: Args) {
 
   if (!park) notFound()
 
-  const [reviews, sameCityParks, priceRows] = await Promise.all([
+  const [reviews, sameCityParks, priceRows, settings] = await Promise.all([
     getReviewsByPark(park.id),
     getParksByCity(city.id),
     getPricesByPark(park.id),
+    getSiteSettings(),
   ])
 
   const displayPrices: PriceLike[] = priceRows.length
@@ -265,7 +267,11 @@ export default async function ParkPage({ params: paramsPromise }: Args) {
               ) : (
                 <p className="text-muted-foreground">Пока нет опубликованных отзывов. Первый отзыв можно отправить через форму ниже.</p>
               )}
-              <ReviewForm parkId={park.id} />
+              {settings.forms?.reviewFormEnabled === false ? (
+                <p className="mt-5 rounded-2xl bg-secondary p-4 text-sm text-muted-foreground">Форма отзывов временно отключена.</p>
+              ) : (
+                <ReviewForm parkId={park.id} />
+              )}
             </Block>
 
             {similarParks.length ? (
@@ -321,7 +327,13 @@ export default async function ParkPage({ params: paramsPromise }: Args) {
               </p>
             </div>
 
-            <ReportIssueForm parkId={park.id} />
+            {settings.forms?.reportFormEnabled === false ? (
+              <div className="rounded-3xl border border-border bg-card p-6 text-sm text-muted-foreground">
+                Форма сообщения об ошибке временно отключена.
+              </div>
+            ) : (
+              <ReportIssueForm parkId={park.id} />
+            )}
           </aside>
         </div>
       </section>

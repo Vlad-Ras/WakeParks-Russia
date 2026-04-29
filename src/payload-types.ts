@@ -126,10 +126,14 @@ export interface Config {
   globals: {
     header: Header;
     footer: Footer;
+    'site-settings': SiteSetting;
+    'map-settings': MapSetting;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    'map-settings': MapSettingsSelect<false> | MapSettingsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -171,12 +175,13 @@ export interface UserAuthOperations {
  */
 export interface City {
   id: number;
+  /**
+   * Название выводится в карточках, хлебных крошках, фильтрах и заголовках страниц.
+   */
   title: string;
   /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   * Используется для страницы регионов и группировки городов.
    */
-  generateSlug?: boolean | null;
-  slug: string;
   region?: string | null;
   /**
    * Выводится на карточке города и в SEO-блоках.
@@ -193,25 +198,47 @@ export interface City {
     cardImagePlacement?: ('top' | 'left' | 'right' | 'background') | null;
     objectPosition?: ('center' | 'top' | 'bottom' | 'left' | 'right') | null;
   };
+  /**
+   * Нужны для будущей карты городов и регионов.
+   */
   coordinates?: {
     lat?: number | null;
     lng?: number | null;
   };
-  isPopular?: boolean | null;
-  sortOrder?: number | null;
+  /**
+   * Если оставить пустым, сайт использует автоматический заголовок и описание.
+   */
   meta?: {
     title?: string | null;
     description?: string | null;
   };
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  /**
+   * Поднимает город в блоках на главной и в списке городов.
+   */
+  isPopular?: boolean | null;
+  /**
+   * Чем меньше число, тем выше город в ручной сортировке.
+   */
+  sortOrder?: number | null;
   updatedAt: string;
   createdAt: string;
 }
 /**
+ * Изображения для городов, парков, галерей, статей и SEO. После загрузки файл можно выбрать в карточке города или парка.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
   id: number;
+  /**
+   * Кратко опиши изображение. Этот текст нужен для SEO и доступности.
+   */
   alt?: string | null;
   caption?: {
     root: {
@@ -331,18 +358,17 @@ export interface FolderInterface {
  */
 export interface Park {
   id: number;
+  /**
+   * Название должно совпадать с тем, как парк представлен на сайте или в картах.
+   */
   title: string;
   /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   * 2–3 предложения для карточки в каталоге. Не вставляй сюда весь текст о парке.
    */
-  generateSlug?: boolean | null;
-  slug: string;
-  city: number | City;
-  /**
-   * Публичная форма добавления создаёт парк со статусом «На модерации».
-   */
-  status: 'draft' | 'pending' | 'published' | 'archived';
   summary: string;
+  /**
+   * Подробное описание для страницы парка: кому подходит, что есть на территории, чем парк выделяется.
+   */
   description?: string | null;
   /**
    * Показывается в карточке парка и в верхнем блоке страницы. Если пусто — будет использовано первое фото из галереи.
@@ -359,22 +385,31 @@ export interface Park {
    * Показывается на странице парка. Первое фото можно использовать как fallback для карточки.
    */
   gallery?: (number | Media)[] | null;
+  /**
+   * Минимальная цена для карточек и сортировок. Подробные цены задаются отдельно.
+   */
   priceFrom?: number | null;
   /**
-   * Например: 4.8
+   * Например: 4.8. Используется в подборках и сравнении.
    */
   rating?: number | null;
+  /**
+   * Можно выбрать несколько вариантов, если парк поддерживает разные форматы катания.
+   */
   cableTypes?: ('ringCable' | 'reverseCable' | 'boatWake' | 'winch')[] | null;
+  /**
+   * Эти галочки используются в фильтрах, подборках и карточке парка.
+   */
   features?: {
     training?: boolean | null;
     equipmentRent?: boolean | null;
     kidsSchool?: boolean | null;
     supRent?: boolean | null;
+    beach?: boolean | null;
     cafe?: boolean | null;
     shower?: boolean | null;
     changingRoom?: boolean | null;
     parking?: boolean | null;
-    beach?: boolean | null;
   };
   /**
    * Оставлено как fallback для старых карточек. Для нового прайса лучше использовать отдельный раздел «Wake каталог → Цены».
@@ -394,6 +429,9 @@ export interface Park {
     vk?: string | null;
     telegram?: string | null;
   };
+  /**
+   * Координаты нужны для карты и подборок по расположению.
+   */
   location?: {
     address?: string | null;
     district?: string | null;
@@ -412,12 +450,6 @@ export interface Park {
     submitterEmail?: string | null;
     comment?: string | null;
   };
-  isVerified?: boolean | null;
-  isFeatured?: boolean | null;
-  /**
-   * Ставится после проверки заявки владельца. Показывает бейдж доверия на сайте.
-   */
-  isClaimed?: boolean | null;
   /**
    * Используется для публичного блока «Данные карточки» и внутреннего контроля обновлений.
    */
@@ -430,14 +462,39 @@ export interface Park {
     freshnessNote?: string | null;
     updatePriority?: ('low' | 'normal' | 'high') | null;
   };
-  /**
-   * Оставлено для совместимости с первой версией. Основное поле теперь — «Статус публикации».
-   */
-  published?: boolean | null;
   meta?: {
     title?: string | null;
     description?: string | null;
   };
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
+  generateSlug?: boolean | null;
+  slug: string;
+  /**
+   * Если парк не появляется на странице города, проверь этот выбор и статус публикации.
+   */
+  city: number | City;
+  /**
+   * На сайте показываются только опубликованные карточки.
+   */
+  status: 'draft' | 'pending' | 'published' | 'archived';
+  /**
+   * Внутренняя отметка качества данных.
+   */
+  isVerified?: boolean | null;
+  /**
+   * Поднимает парк в рекомендуемых и тематических списках.
+   */
+  isFeatured?: boolean | null;
+  /**
+   * Ставится после проверки заявки владельца. Показывает бейдж доверия на сайте.
+   */
+  isClaimed?: boolean | null;
+  /**
+   * Оставлено для совместимости с первой версией. Основное поле теперь — «Статус публикации».
+   */
+  published?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -621,7 +678,7 @@ export interface Page {
             url?: string | null;
             label: string;
             /**
-             * Choose how the link should be rendered.
+             * Выбери, как ссылка будет выглядеть на сайте.
              */
             appearance?: ('default' | 'outline') | null;
           };
@@ -786,7 +843,7 @@ export interface CallToActionBlock {
           url?: string | null;
           label: string;
           /**
-           * Choose how the link should be rendered.
+           * Выбери, как ссылка будет выглядеть на сайте.
            */
           appearance?: ('default' | 'outline') | null;
         };
@@ -836,7 +893,7 @@ export interface ContentBlock {
           url?: string | null;
           label: string;
           /**
-           * Choose how the link should be rendered.
+           * Выбери, как ссылка будет выглядеть на сайте.
            */
           appearance?: ('default' | 'outline') | null;
         };
@@ -1098,7 +1155,7 @@ export interface Form {
 export interface Redirect {
   id: number;
   /**
-   * You will need to rebuild the website when changing this field.
+   * После изменения редиректа нужно пересобрать сайт перед публикацией.
    */
   from: string;
   to?: {
@@ -1397,8 +1454,6 @@ export interface PayloadMigration {
  */
 export interface CitiesSelect<T extends boolean = true> {
   title?: T;
-  generateSlug?: T;
-  slug?: T;
   region?: T;
   summary?: T;
   coverImage?: T;
@@ -1414,14 +1469,16 @@ export interface CitiesSelect<T extends boolean = true> {
         lat?: T;
         lng?: T;
       };
-  isPopular?: T;
-  sortOrder?: T;
   meta?:
     | T
     | {
         title?: T;
         description?: T;
       };
+  generateSlug?: T;
+  slug?: T;
+  isPopular?: T;
+  sortOrder?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1431,10 +1488,6 @@ export interface CitiesSelect<T extends boolean = true> {
  */
 export interface ParksSelect<T extends boolean = true> {
   title?: T;
-  generateSlug?: T;
-  slug?: T;
-  city?: T;
-  status?: T;
   summary?: T;
   description?: T;
   cardImage?: T;
@@ -1455,11 +1508,11 @@ export interface ParksSelect<T extends boolean = true> {
         equipmentRent?: T;
         kidsSchool?: T;
         supRent?: T;
+        beach?: T;
         cafe?: T;
         shower?: T;
         changingRoom?: T;
         parking?: T;
-        beach?: T;
       };
   prices?:
     | T
@@ -1497,9 +1550,6 @@ export interface ParksSelect<T extends boolean = true> {
         submitterEmail?: T;
         comment?: T;
       };
-  isVerified?: T;
-  isFeatured?: T;
-  isClaimed?: T;
   dataQuality?:
     | T
     | {
@@ -1508,13 +1558,20 @@ export interface ParksSelect<T extends boolean = true> {
         freshnessNote?: T;
         updatePriority?: T;
       };
-  published?: T;
   meta?:
     | T
     | {
         title?: T;
         description?: T;
       };
+  generateSlug?: T;
+  slug?: T;
+  city?: T;
+  status?: T;
+  isVerified?: T;
+  isFeatured?: T;
+  isClaimed?: T;
+  published?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -2198,11 +2255,16 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   createdAt?: T;
 }
 /**
+ * Дополнительные пункты меню в шапке. Основные пункты каталога уже добавлены в коде сайта.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header".
  */
 export interface Header {
   id: number;
+  /**
+   * Используй для временных или служебных ссылок. Основные разделы уже сгруппированы в шапке.
+   */
   navItems?:
     | {
         link: {
@@ -2227,11 +2289,16 @@ export interface Header {
   createdAt?: string | null;
 }
 /**
+ * Дополнительные ссылки в нижней части сайта. Основные группы подвала уже собраны в коде.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "footer".
  */
 export interface Footer {
   id: number;
+  /**
+   * Например: партнёрские страницы, служебные документы или временные акции.
+   */
   navItems?:
     | {
         link: {
@@ -2252,6 +2319,110 @@ export interface Footer {
         id?: string | null;
       }[]
     | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Общие настройки проекта, контакты, формы, каталог и правила модерации.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  /**
+   * Используется в подвале, служебных блоках и как fallback для SEO.
+   */
+  projectName: string;
+  /**
+   * Выводится в подвале и на информационных страницах, если нет отдельного текста.
+   */
+  tagline?: string | null;
+  /**
+   * Внутренняя подсказка. На публичном сайте не используется.
+   */
+  adminChecklist?: string | null;
+  contacts?: {
+    /**
+     * Показывается на странице контактов и в подвале, если заполнен.
+     */
+    publicEmail?: string | null;
+    phone?: string | null;
+    telegram?: string | null;
+    vk?: string | null;
+  };
+  catalog?: {
+    /**
+     * Если выключить, пустые города исчезнут из публичного списка городов.
+     */
+    showEmptyCities?: boolean | null;
+    citySort?: ('parksCount' | 'alphabet' | 'manual') | null;
+    parkSort?: ('featured' | 'ratingDesc' | 'priceAsc' | 'priceDesc' | 'titleAsc') | null;
+    /**
+     * Управляет публичным выводом блока актуальности данных в карточках.
+     */
+    showDataQuality?: boolean | null;
+  };
+  forms?: {
+    contactFormEnabled?: boolean | null;
+    addParkFormEnabled?: boolean | null;
+    reviewFormEnabled?: boolean | null;
+    reportFormEnabled?: boolean | null;
+    claimFormEnabled?: boolean | null;
+    honeypotEnabled?: boolean | null;
+    newParkStatus?: ('draft' | 'pending') | null;
+    newPriceStatus?: ('draft' | 'pending') | null;
+    newReviewStatus?: ('pending' | 'published') | null;
+    /**
+     * Внутренняя заметка для редакторов.
+     */
+    moderationNote?: string | null;
+  };
+  seoDefaults?: {
+    title?: string | null;
+    description?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Ключи и режим отображения карт на публичных страницах сайта.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "map-settings".
+ */
+export interface MapSetting {
+  id: number;
+  /**
+   * Для локального MVP можно оставить схему без ключа. Если хочешь настоящую Яндекс.Карту с маркерами, выбери JavaScript API и заполни ключ ниже.
+   */
+  provider: 'schema' | 'yandex-js-api';
+  /**
+   * Ключ из кабинета разработчика Яндекс.Карт. Не путать со ссылкой на маршрут — это именно ключ JavaScript API.
+   */
+  yandexApiKey?: string | null;
+  /**
+   * Встроенная карта по координатам работает без API-ключа. Её можно оставить как запасной вариант.
+   */
+  showYandexEmbedFallback?: boolean | null;
+  defaultCenter?: {
+    /**
+     * Например, Москва: 55.751244
+     */
+    lat?: number | null;
+    /**
+     * Например, Москва: 37.618423
+     */
+    lng?: number | null;
+  };
+  /**
+   * Для карты России обычно удобно 4–5. Для одного города — 10–12.
+   */
+  defaultZoom?: number | null;
+  /**
+   * Техническая заметка для администраторов. На сайте не показывается.
+   */
+  adminNote?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2297,6 +2468,74 @@ export interface FooterSelect<T extends boolean = true> {
             };
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  projectName?: T;
+  tagline?: T;
+  adminChecklist?: T;
+  contacts?:
+    | T
+    | {
+        publicEmail?: T;
+        phone?: T;
+        telegram?: T;
+        vk?: T;
+      };
+  catalog?:
+    | T
+    | {
+        showEmptyCities?: T;
+        citySort?: T;
+        parkSort?: T;
+        showDataQuality?: T;
+      };
+  forms?:
+    | T
+    | {
+        contactFormEnabled?: T;
+        addParkFormEnabled?: T;
+        reviewFormEnabled?: T;
+        reportFormEnabled?: T;
+        claimFormEnabled?: T;
+        honeypotEnabled?: T;
+        newParkStatus?: T;
+        newPriceStatus?: T;
+        newReviewStatus?: T;
+        moderationNote?: T;
+      };
+  seoDefaults?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "map-settings_select".
+ */
+export interface MapSettingsSelect<T extends boolean = true> {
+  provider?: T;
+  yandexApiKey?: T;
+  showYandexEmbedFallback?: T;
+  defaultCenter?:
+    | T
+    | {
+        lat?: T;
+        lng?: T;
+      };
+  defaultZoom?: T;
+  adminNote?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

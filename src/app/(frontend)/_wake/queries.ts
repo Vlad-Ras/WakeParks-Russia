@@ -132,17 +132,114 @@ const publishedWhere = {
   ],
 }
 
-export async function getCities(): Promise<CityDoc[]> {
-  const payload = await getPayload({ config: configPromise })
+type PayloadClient = Awaited<ReturnType<typeof getPayload>>
+
+function normalizeRefId(value: unknown): string | null {
+  if (value === null || value === undefined || value === '') return null
+  return String(value)
+}
+
+export function getCityRefId(city: CityDoc | string | number | null | undefined): string | null {
+  if (!city) return null
+  if (typeof city === 'string' || typeof city === 'number') return normalizeRefId(city)
+  return normalizeRefId(city.id)
+}
+
+export function getParkCityId(park: ParkDoc): string | null {
+  return getCityRefId(park.city)
+}
+
+export function getCityTitle(city: CityDoc | string | number | null | undefined, fallback = 'Город не указан') {
+  if (!city || typeof city === 'string' || typeof city === 'number') return fallback
+  return city.title || fallback
+}
+
+export function getCitySlug(city: CityDoc | string | number | null | undefined): string | undefined {
+  if (!city || typeof city === 'string' || typeof city === 'number') return undefined
+  return city.slug || undefined
+}
+
+export function buildCityMap(cities: CityDoc[]): Map<string, CityDoc> {
+  const map = new Map<string, CityDoc>()
+
+  for (const city of cities) {
+    const id = getCityRefId(city)
+    if (id) map.set(id, city)
+    if (city.slug) map.set(`slug:${city.slug}`, city)
+  }
+
+  return map
+}
+
+export function hydrateParkCity(park: ParkDoc, cityMap: Map<string, CityDoc>): ParkDoc {
+  const cityId = getParkCityId(park)
+  if (!cityId) return park
+
+  const resolvedCity = cityMap.get(cityId)
+  if (!resolvedCity) return park
+
+  if (typeof park.city === 'object' && park.city) {
+    return {
+      ...park,
+      city: {
+        ...resolvedCity,
+        ...park.city,
+      },
+    }
+  }
+
+  return {
+    ...park,
+    city: resolvedCity,
+  }
+}
+
+export function hydrateParksWithCities(parks: ParkDoc[], cities: CityDoc[]): ParkDoc[] {
+  const cityMap = buildCityMap(cities)
+  return parks.map((park) => hydrateParkCity(park, cityMap))
+}
+
+export function countParksByCity(parks: ParkDoc[]): Map<string, number> {
+  const counts = new Map<string, number>()
+
+  for (const park of parks) {
+    const cityId = getParkCityId(park)
+    if (!cityId) continue
+    counts.set(cityId, (counts.get(cityId) || 0) + 1)
+  }
+
+  return counts
+}
+
+async function findCities(payload: PayloadClient, limit = 1000): Promise<CityDoc[]> {
   const result = await payload.find({
     collection: CITIES_COLLECTION,
     depth: 1,
-    limit: 100,
+    limit,
     pagination: false,
     sort: 'sortOrder',
   })
 
   return result.docs as CityDoc[]
+}
+
+async function findCityById(payload: PayloadClient, cityId: string | number): Promise<CityDoc | null> {
+  try {
+    const result = await payload.findByID({
+      collection: CITIES_COLLECTION,
+      depth: 1,
+      id: cityId,
+    })
+
+    return (result as CityDoc | undefined) || null
+  } catch {
+    return null
+  }
+}
+
+export async function getCities(): Promise<CityDoc[]> {
+  const payload = await getPayload({ config: configPromise })
+  return findCities(payload)
 }
 
 export async function getCityBySlug(slug: string): Promise<CityDoc | null> {
@@ -164,66 +261,49 @@ export async function getCityBySlug(slug: string): Promise<CityDoc | null> {
 
 export async function getParks(limit = 100): Promise<ParkDoc[]> {
   const payload = await getPayload({ config: configPromise })
-  const result = await payload.find({
-    collection: PARKS_COLLECTION,
-    depth: 1,
-    limit,
-    pagination: false,
-    sort: '-isFeatured',
-    where: publishedWhere,
-  })
+  const [result, cities] = await Promise.all([
+    payload.find({
+      collection: PARKS_COLLECTION,
+      depth: 2,
+      limit,
+      pagination: false,
+      sort: '-isFeatured',
+      where: publishedWhere,
+    }),
+    findCities(payload),
+  ])
 
-  return result.docs as ParkDoc[]
+  return hydrateParksWithCities(result.docs as ParkDoc[], cities)
 }
 
 export async function getParksByCity(cityId: string | number): Promise<ParkDoc[]> {
   const payload = await getPayload({ config: configPromise })
-  const result = await payload.find({
-    collection: PARKS_COLLECTION,
-    depth: 1,
-    limit: 100,
-    pagination: false,
-    sort: '-isFeatured',
-    where: {
-      and: [
-        {
-          city: {
-            equals: cityId,
-          },
-        },
-        publishedWhere,
-      ],
-    },
-  })
+  const city = await findCityById(payload, cityId)
 
-  return result.docs as ParkDoc[]
+  if (!city) return []
+
+  // Важно: в Payload relationship-поле `city` в разных адаптерах/запросах может
+  // фильтроваться нестабильно, особенно когда связь пришла как объект или как ID.
+  // Поэтому для публичной страницы города берём опубликованные парки и фильтруем
+  // по уже нормализованной связи в коде. Это надёжнее, чем `where: { city: { equals } }`.
+  const parks = await getParks(1000)
+  const targetCityId = normalizeRefId(city.id)
+  const targetCitySlug = city.slug
+
+  return parks.filter((park) => {
+    const parkCityId = getParkCityId(park)
+    const parkCitySlug = getCitySlug(park.city)
+
+    if (targetCityId && parkCityId === targetCityId) return true
+    if (targetCitySlug && parkCitySlug === targetCitySlug) return true
+
+    return false
+  })
 }
 
 export async function getParkBySlug(cityId: string | number, slug: string): Promise<ParkDoc | null> {
-  const payload = await getPayload({ config: configPromise })
-  const result = await payload.find({
-    collection: PARKS_COLLECTION,
-    depth: 1,
-    limit: 1,
-    pagination: false,
-    where: {
-      and: [
-        {
-          city: {
-            equals: cityId,
-          },
-        },
-        {
-          slug: {
-            equals: slug,
-          },
-        },
-        publishedWhere,
-      ],
-    },
-  })
-
-  return (result.docs?.[0] as ParkDoc | undefined) || null
+  const parks = await getParksByCity(cityId)
+  return parks.find((park) => park.slug === slug) || null
 }
 
 export async function getPricesByPark(parkId: string | number, includePending = false): Promise<PriceDoc[]> {
@@ -288,4 +368,44 @@ export async function getReviewsByPark(parkId: string | number, limit = 20): Pro
 export function getCityFromPark(park: ParkDoc): CityDoc | null {
   if (!park.city || typeof park.city === 'string' || typeof park.city === 'number') return null
   return park.city
+}
+
+export function getParkHref(park: ParkDoc, fallback = '/wake-parks') {
+  const city = getCityFromPark(park)
+  if (!city?.slug || !park.slug) return fallback
+  return `/wake-parks/${city.slug}/${park.slug}`
+}
+
+export type MapSettingsDoc = {
+  provider?: 'schema' | 'yandex-js-api'
+  yandexApiKey?: string
+  showYandexEmbedFallback?: boolean
+  defaultCenter?: {
+    lat?: number
+    lng?: number
+  }
+  defaultZoom?: number
+}
+
+export async function getMapSettings(): Promise<MapSettingsDoc> {
+  const payload = await getPayload({ config: configPromise })
+
+  try {
+    const settings = await payload.findGlobal({
+      slug: 'map-settings' as any,
+      depth: 0,
+    })
+
+    return (settings || {}) as MapSettingsDoc
+  } catch {
+    return {
+      provider: 'schema',
+      showYandexEmbedFallback: true,
+      defaultCenter: {
+        lat: 55.751244,
+        lng: 37.618423,
+      },
+      defaultZoom: 5,
+    }
+  }
 }

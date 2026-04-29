@@ -5,6 +5,7 @@ import { Breadcrumbs } from '../../_wake/Breadcrumbs'
 import { CityFilters, type CityFilterValues } from '../../_wake/CityFilters'
 import { EmptyCatalogHint, ParkCard } from '../../_wake/cards'
 import { getImageAlt, getImageUrl, getObjectPosition } from '../../_wake/media'
+import { getSiteSettings } from '../../_wake/siteSettings'
 import type { ParkDoc } from '../../_wake/queries'
 import { getCities, getCityBySlug, getParksByCity } from '../../_wake/queries'
 
@@ -45,7 +46,8 @@ export default async function CityWakeParksPage({ params: paramsPromise, searchP
 
   if (!city) notFound()
 
-  const filters = normalizeFilters(rawSearchParams)
+  const settings = await getSiteSettings()
+  const filters = normalizeFilters(rawSearchParams, settings.catalog?.parkSort || 'featured')
   const cityImageUrl = getImageUrl(city.coverImage, 'large')
   const cityImagePosition = getObjectPosition(city.imageSettings?.objectPosition)
   const allParks = await getParksByCity(city.id)
@@ -105,13 +107,13 @@ export default async function CityWakeParksPage({ params: paramsPromise, searchP
   )
 }
 
-function normalizeFilters(params: Record<string, string | string[] | undefined>): CityFilterValues {
+function normalizeFilters(params: Record<string, string | string[] | undefined>, defaultSort = 'featured'): CityFilterValues {
   return {
     q: asString(params.q).trim(),
     features: asArray(params.feature),
     cableTypes: asArray(params.cable),
     maxPrice: asString(params.maxPrice).trim(),
-    sort: asString(params.sort).trim() || 'featured',
+    sort: asString(params.sort).trim() || defaultSort,
   }
 }
 

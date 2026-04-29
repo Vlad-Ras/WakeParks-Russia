@@ -16,7 +16,7 @@ export const ContactRequests: CollectionConfig = {
   },
   admin: {
     defaultColumns: ['subject', 'requestType', 'status', 'name', 'createdAt'],
-    group: 'Обратная связь',
+    group: '3. Обратная связь',
     useAsTitle: 'subject',
   },
   fields: [

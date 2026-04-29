@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { Breadcrumbs } from '../../_wake/Breadcrumbs'
 import { CityCard, EmptyCatalogHint, ParkCard } from '../../_wake/cards'
 import { buildRegionGroups, findRegionGroup } from '../../_wake/regionUtils'
-import { getCities, getParks } from '../../_wake/queries'
+import { countParksByCity, getCities, getParks, getCityRefId } from '../../_wake/queries'
 
 export async function generateMetadata({ params: paramsPromise }: { params: Promise<{ regionSlug: string }> }): Promise<Metadata> {
   const { regionSlug } = await paramsPromise
@@ -30,12 +30,8 @@ export default async function RegionPage({ params: paramsPromise }: { params: Pr
 
   if (!region) notFound()
 
-  const parkCounts = new Map<string | number, number>()
-  region.parks.forEach((park) => {
-    const city = typeof park.city === 'object' && park.city ? park.city : null
-    if (!city?.id) return
-    parkCounts.set(city.id, (parkCounts.get(city.id) || 0) + 1)
-  })
+  const parkCounts = countParksByCity(parks)
+
 
   return (
     <main className="container py-16">
@@ -63,7 +59,7 @@ export default async function RegionPage({ params: paramsPromise }: { params: Pr
         {region.cities.length ? (
           <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {region.cities.map((city) => (
-              <CityCard city={city} key={city.id} parksCount={parkCounts.get(city.id) || 0} />
+              <CityCard city={city} key={city.id} parksCount={parkCounts.get(getCityRefId(city) || '') || 0} />
             ))}
           </div>
         ) : (

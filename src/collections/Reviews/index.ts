@@ -23,7 +23,7 @@ export const Reviews: CollectionConfig = {
   },
   admin: {
     defaultColumns: ['park', 'authorName', 'rating', 'status', 'createdAt'],
-    group: 'Wake каталог',
+    group: '1. Wake каталог',
     useAsTitle: 'authorName',
   },
   fields: [

@@ -6,11 +6,11 @@ export type LinkAppearances = 'default' | 'outline'
 
 export const appearanceOptions: Record<LinkAppearances, { label: string; value: string }> = {
   default: {
-    label: 'Default',
+    label: 'Основная кнопка',
     value: 'default',
   },
   outline: {
-    label: 'Outline',
+    label: 'Контурная кнопка',
     value: 'outline',
   },
 }
@@ -24,6 +24,7 @@ type LinkType = (options?: {
 export const link: LinkType = ({ appearances, disableLabel = false, overrides = {} } = {}) => {
   const linkResult: GroupField = {
     name: 'link',
+    label: 'Ссылка',
     type: 'group',
     admin: {
       hideGutter: true,
@@ -34,6 +35,7 @@ export const link: LinkType = ({ appearances, disableLabel = false, overrides = 
         fields: [
           {
             name: 'type',
+            label: 'Тип ссылки',
             type: 'radio',
             admin: {
               layout: 'horizontal',
@@ -42,11 +44,11 @@ export const link: LinkType = ({ appearances, disableLabel = false, overrides = 
             defaultValue: 'reference',
             options: [
               {
-                label: 'Internal link',
+                label: 'Внутренняя страница',
                 value: 'reference',
               },
               {
-                label: 'Custom URL',
+                label: 'Произвольный URL',
                 value: 'custom',
               },
             ],
@@ -60,7 +62,7 @@ export const link: LinkType = ({ appearances, disableLabel = false, overrides = 
               },
               width: '50%',
             },
-            label: 'Open in new tab',
+            label: 'Открывать в новой вкладке',
           },
         ],
       },
@@ -74,7 +76,7 @@ export const link: LinkType = ({ appearances, disableLabel = false, overrides = 
       admin: {
         condition: (_, siblingData) => siblingData?.type === 'reference',
       },
-      label: 'Document to link to',
+      label: 'Страница или статья',
       relationTo: ['pages', 'posts'],
       required: true,
     },
@@ -83,14 +85,15 @@ export const link: LinkType = ({ appearances, disableLabel = false, overrides = 
       type: 'text',
       admin: {
         condition: (_, siblingData) => siblingData?.type === 'custom',
+        placeholder: 'https://... или /wake-parks',
       },
-      label: 'Custom URL',
+      label: 'Адрес ссылки',
       required: true,
     },
   ]
 
   if (!disableLabel) {
-    linkTypes.map((linkType) => ({
+    const linkTypesWithWidth = linkTypes.map((linkType) => ({
       ...linkType,
       admin: {
         ...linkType.admin,
@@ -101,14 +104,14 @@ export const link: LinkType = ({ appearances, disableLabel = false, overrides = 
     linkResult.fields.push({
       type: 'row',
       fields: [
-        ...linkTypes,
+        ...linkTypesWithWidth,
         {
           name: 'label',
           type: 'text',
           admin: {
             width: '50%',
           },
-          label: 'Label',
+          label: 'Текст ссылки',
           required: true,
         },
       ],
@@ -126,9 +129,10 @@ export const link: LinkType = ({ appearances, disableLabel = false, overrides = 
 
     linkResult.fields.push({
       name: 'appearance',
+      label: 'Внешний вид ссылки',
       type: 'select',
       admin: {
-        description: 'Choose how the link should be rendered.',
+        description: 'Выбери, как ссылка будет выглядеть на сайте.',
       },
       defaultValue: 'default',
       options: appearanceOptionsToUse,

@@ -2,6 +2,7 @@ import Link from 'next/link'
 
 import { Breadcrumbs } from '../_wake/Breadcrumbs'
 import { getParks } from '../_wake/queries'
+import { getSiteSettings } from '../_wake/siteSettings'
 import { ClaimParkForm } from './ClaimParkForm'
 
 export const metadata = {
@@ -16,7 +17,7 @@ type Args = {
 export default async function ForParksPage({ searchParams: searchParamsPromise }: Args) {
   const searchParams = (await searchParamsPromise) || {}
   const initialParkId = Array.isArray(searchParams.park) ? searchParams.park[0] : searchParams.park
-  const parks = await getParks(1000)
+  const [parks, settings] = await Promise.all([getParks(1000), getSiteSettings()])
 
   return (
     <main>
@@ -74,7 +75,16 @@ export default async function ForParksPage({ searchParams: searchParamsPromise }
         </aside>
 
         <section id="claim-form">
-          <ClaimParkForm initialParkId={initialParkId} parks={parks} />
+          {settings.forms?.claimFormEnabled === false ? (
+            <div className="rounded-3xl border border-dashed border-border bg-card p-8 text-center">
+              <h2 className="text-2xl font-semibold">Форма подтверждения владельца временно отключена</h2>
+              <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
+                Включить её можно в админке: 4. Система → Настройки сайта → Формы и модерация.
+              </p>
+            </div>
+          ) : (
+            <ClaimParkForm initialParkId={initialParkId} parks={parks} />
+          )}
         </section>
       </section>
     </main>

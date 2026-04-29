@@ -2,6 +2,8 @@ import configPromise from '@payload-config'
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 
+import { getSiteSettings } from '../../_wake/siteSettings'
+
 type ClaimParkBody = {
   parkId?: string | number
   claimType?: string
@@ -28,8 +30,13 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as ClaimParkBody
 
-    if (body.company) return NextResponse.json({ ok: true })
+    const settings = await getSiteSettings()
 
+    if (settings.forms?.claimFormEnabled === false) {
+      return NextResponse.json({ error: 'Форма подтверждения владельца временно отключена.' }, { status: 503 })
+    }
+
+    if (settings.forms?.honeypotEnabled !== false && body.company) return NextResponse.json({ ok: true })
     const parkId = normalizeId(body.parkId)
     const claimType = allowedClaimTypes.has(String(body.claimType)) ? String(body.claimType) : 'owner'
     const preferredContact = allowedPreferredContacts.has(String(body.preferredContact)) ? String(body.preferredContact) : 'telegram'
